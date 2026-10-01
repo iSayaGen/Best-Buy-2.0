@@ -23,6 +23,10 @@ class Store:
 
     def order(self, shopping_list):
         """Process an order and return its total price."""
+        # Although this method does not currently access self directly,
+        # it represents an operation performed by a specific Store instance.
+        # We keep it as an instance method so orders remain associated
+        # with a specific store, instead of converting it to a static method
         quantities = {}
 
         # Validate the complete order before changing any stock.
