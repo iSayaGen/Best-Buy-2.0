@@ -1,4 +1,5 @@
 import products
+import promotions
 import store
 
 
@@ -35,9 +36,11 @@ def get_yes_no(message):
 
 def get_available_quantity(product, shopping_list):
     """Return the quantity available after accounting for the cart."""
+    if not product.is_stocked():
+        return None
+
     ordered_quantity = sum(
-        quantity
-        for ordered_product, quantity in shopping_list
+        quantity for ordered_product, quantity in shopping_list
         if ordered_product == product
     )
 
@@ -77,9 +80,9 @@ def show_total_quantity(store):
 def get_orderable_products(store, shopping_list):
     """Return products still available for the current order."""
     return [
-        product
-        for product in store.get_all_products()
-        if get_available_quantity(product, shopping_list) > 0
+        product for product in store.get_all_products()
+        if not product.is_stocked()
+           or get_available_quantity(product, shopping_list) > 0
     ]
 
 
@@ -88,28 +91,81 @@ def add_product_to_order(available_products, shopping_list):
     print("\nAvailable products:")
 
     for index, product in enumerate(available_products, start=1):
-        available_quantity = get_available_quantity(product, shopping_list)
+        available_quantity = get_available_quantity(
+            product,
+            shopping_list
+        )
+
+        if product.is_stocked():
+            quantity_text = f"Quantity: {available_quantity}"
+        else:
+            quantity_text = "Non-stocked"
+
+        promotion_text = (
+            f", Promotion: {product.promotion.name}"
+            if product.promotion
+            else ""
+        )
+
+        maximum_text = (
+            f", Maximum: {product.maximum}"
+            if hasattr(product, "maximum")
+            else ""
+        )
 
         print(
             f"{index}. "
             f"{product.name}, "
             f"Price: {product.price}, "
-            f"Quantity: {available_quantity}"
+            f"{quantity_text}"
+            f"{maximum_text}"
+            f"{promotion_text}"
         )
 
     product_choice = get_choice(
-        "Please enter the product number: ", 1, len(available_products)
+        "Please enter the product number: ",
+        1,
+        len(available_products)
     )
 
     product = available_products[product_choice - 1]
 
-    available_quantity = get_available_quantity(product, shopping_list)
+    available_quantity = get_available_quantity(
+        product,
+        shopping_list
+    )
 
-    quantity = get_choice("\nPlease enter the quantity: ", 1, available_quantity)
+    if product.is_stocked():
+        maximum_quantity = available_quantity
+
+        if hasattr(product, "maximum"):
+            maximum_quantity = min(
+                available_quantity,
+                product.maximum
+            )
+
+        quantity = get_choice(
+            "\nPlease enter the quantity: ",
+            1,
+            maximum_quantity
+        )
+    else:
+        quantity = get_integer(
+            "\nPlease enter the quantity: "
+        )
+
+        while quantity <= 0:
+            print("Please enter a positive quantity.")
+            quantity = get_integer(
+                "\nPlease enter the quantity: "
+            )
 
     shopping_list.append((product, quantity))
 
-    print(f"\n{quantity} {product.name} added to the shopping list.\n")
+    print(
+        f"\n{quantity} {product.name} "
+        "added to the shopping list.\n"
+    )
 
 
 def make_order(store):
@@ -160,7 +216,7 @@ def start(store):
 
 def main():
     """Create the store and start the application."""
-    # setup initial stock of inventory
+    # Setup initial stock of inventory
     product_list = [
         products.Product("MacBook Air M2", price=1450, quantity=100),
         products.Product("Bose QuietComfort Earbuds", price=250, quantity=500),
@@ -169,7 +225,18 @@ def main():
         products.LimitedProduct("Shipping", price=10, quantity=250, maximum=1),
     ]
 
+    # Create promotion catalog
+    second_half_price = promotions.SecondHalfPrice("Second Half price!")
+    third_one_free = promotions.ThirdOneFree("Third One Free!")
+    thirty_percent = promotions.PercentDiscount("30% off!", percent=30)
+
+    # Add promotions to products
+    product_list[0].set_promotion(second_half_price)
+    product_list[1].set_promotion(third_one_free)
+    product_list[3].set_promotion(thirty_percent)
+
     best_buy = store.Store(product_list)
+
     start(best_buy)
 
 

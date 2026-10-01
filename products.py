@@ -1,5 +1,5 @@
 class Product:
-    """Represent products that can be sold by the store."""
+    """Represent a product that can be sold by the store."""
 
     def __init__(self, name, price, quantity):
         """Create a product with a name, price, and stock quantity."""
@@ -7,15 +7,20 @@ class Product:
             raise ValueError("Product name cannot be empty.")
 
         if price < 0:
-            raise ValueError("Product price cannot be negative")
+            raise ValueError("Product price cannot be negative.")
 
         if quantity < 0:
-            raise ValueError("Product quantity cannot be negative")
+            raise ValueError("Product quantity cannot be negative.")
 
         self.name = name.strip()
         self.price = price
         self.quantity = quantity
         self.active = quantity > 0
+        self.promotion = None
+
+    def is_stocked(self):
+        """Return True if the product has physical stock."""
+        return True
 
     def get_quantity(self):
         """Return the current quantity in stock."""
@@ -43,22 +48,46 @@ class Product:
         """Deactivate the product."""
         self.active = False
 
+    def get_promotion(self):
+        """Return the current promotion."""
+        return self.promotion
+
+    def set_promotion(self, promotion):
+        """Set the current promotion."""
+        self.promotion = promotion
+
+    def _get_promotion_text(self):
+        """Return the promotion text used when displaying the product."""
+        if self.promotion:
+            return f", Promotion: {self.promotion.name}"
+
+        return ""
+
     def show(self):
         """Print the product's information."""
-        print(f"{self.name}, Price: {self.price}, Quantity: {self.quantity}")
+        print(
+            f"{self.name}, "
+            f"Price: {self.price}, "
+            f"Quantity: {self.quantity}"
+            f"{self._get_promotion_text()}"
+        )
 
     def buy(self, quantity):
         """Purchase a quantity of the product and return the total price."""
         if not self.active:
-            raise ValueError("Product is sold out")
+            raise ValueError("Product is sold out.")
 
         if quantity <= 0:
             raise ValueError("Purchase quantity must be positive.")
 
         if quantity > self.quantity:
-            raise ValueError("Not enough items in stock")
+            raise ValueError("Not enough items in stock.")
 
-        total_price = self.price * quantity
+        if self.promotion:
+            total_price = self.promotion.apply_promotion(self, quantity)
+        else:
+            total_price = self.price * quantity
+
         self.set_quantity(self.quantity - quantity)
 
         return total_price
@@ -72,8 +101,15 @@ class NonStockedProduct(Product):
         super().__init__(name, price, quantity=0)
         self.active = True
 
+    def is_stocked(self):
+        """Return False because this product has no physical stock."""
+        return False
+
     def set_quantity(self, quantity):
         """Keep the quantity of a non-stocked product at zero."""
+        if quantity < 0:
+            raise ValueError("Product quantity cannot be negative.")
+
         self.quantity = 0
 
     def buy(self, quantity):
@@ -84,12 +120,18 @@ class NonStockedProduct(Product):
         if quantity <= 0:
             raise ValueError("Purchase quantity must be positive.")
 
+        if self.promotion:
+            return self.promotion.apply_promotion(self, quantity)
+
         return self.price * quantity
 
     def show(self):
         """Print the non-stocked product's information."""
         print(
-            f"{self.name}, Price: {self.price}")
+            f"{self.name}, "
+            f"Price: {self.price}"
+            f"{self._get_promotion_text()}"
+        )
 
 
 class LimitedProduct(Product):
@@ -119,4 +161,5 @@ class LimitedProduct(Product):
             f"Price: {self.price}, "
             f"Quantity: {self.quantity}, "
             f"Maximum: {self.maximum}"
+            f"{self._get_promotion_text()}"
         )

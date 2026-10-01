@@ -1,3 +1,6 @@
+from products import LimitedProduct
+
+
 class Store:
     """Represent a store containing products."""
 
@@ -22,11 +25,10 @@ class Store:
         return [product for product in self.products if product.is_active()]
 
     def order(self, shopping_list):
-        """Process an order and return its total price."""
-        # Although this method does not currently access self directly,
-        # it represents an operation performed by a specific Store instance.
-        # We keep it as an instance method so orders remain associated
-        # with a specific store, instead of converting it to a static method
+        """Validate and process an order and return its total price."""
+        # This remains an instance method even though it does not currently use self.
+        # An order belongs to a specific Store instance, so we keep it as a store
+        # operation rather than converting it to a static method.
         quantities = {}
 
         # Validate the complete order before changing any stock.
@@ -40,10 +42,13 @@ class Store:
             quantities[product] = quantities.get(product, 0) + quantity
 
         for product, quantity in quantities.items():
-            if quantity > product.get_quantity():
+            if product.is_stocked() and quantity > product.get_quantity():
                 raise ValueError(f"Not enough {product.name} in stock.")
 
-        # All products have enough stock, so the order can be processed.
+            if (isinstance(product, LimitedProduct) and quantity > product.maximum):
+                raise ValueError(f"Cannot purchase more than {product.maximum} of this product.")
+
+        # All products have passed validation.
         total = 0
 
         for product, quantity in shopping_list:
