@@ -26,9 +26,10 @@ class Store:
 
     def order(self, shopping_list):
         """Validate and process an order and return its total price."""
-        # This remains an instance method even though it does not currently use self.
-        # An order belongs to a specific Store instance, so we keep it as a store
-        # operation rather than converting it to a static method.
+        # Although this method does not currently access self directly,
+        # it represents an operation performed by a specific Store instance.
+        # Therefore, I keep it as an instance method so orders remain associated
+        # with a specific store, instead of converting it to a static method.
         quantities = {}
 
         # Validate the complete order before changing any stock.
@@ -45,7 +46,7 @@ class Store:
             if product.is_stocked() and quantity > product.get_quantity():
                 raise ValueError(f"Not enough {product.name} in stock.")
 
-            if (isinstance(product, LimitedProduct) and quantity > product.maximum):
+            if isinstance(product, LimitedProduct) and quantity > product.maximum:
                 raise ValueError(f"Cannot purchase more than {product.maximum} of this product.")
 
         # All products have passed validation.

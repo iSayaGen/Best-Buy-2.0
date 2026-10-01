@@ -1,6 +1,6 @@
 import products
 import promotions
-import store
+from store import Store
 
 
 def get_integer(message):
@@ -36,11 +36,9 @@ def get_yes_no(message):
 
 def get_available_quantity(product, shopping_list):
     """Return the quantity available after accounting for the cart."""
-    if not product.is_stocked():
-        return None
-
     ordered_quantity = sum(
-        quantity for ordered_product, quantity in shopping_list
+        quantity
+        for ordered_product, quantity in shopping_list
         if ordered_product == product
     )
 
@@ -109,7 +107,7 @@ def add_product_to_order(available_products, shopping_list):
 
         maximum_text = (
             f", Maximum: {product.maximum}"
-            if hasattr(product, "maximum")
+            if isinstance(product, products.LimitedProduct)
             else ""
         )
 
@@ -138,7 +136,7 @@ def add_product_to_order(available_products, shopping_list):
     if product.is_stocked():
         maximum_quantity = available_quantity
 
-        if hasattr(product, "maximum"):
+        if isinstance(product, products.LimitedProduct):
             maximum_quantity = min(
                 available_quantity,
                 product.maximum
@@ -235,7 +233,7 @@ def main():
     product_list[1].set_promotion(third_one_free)
     product_list[3].set_promotion(thirty_percent)
 
-    best_buy = store.Store(product_list)
+    best_buy = Store(product_list)
 
     start(best_buy)
 
