@@ -3,7 +3,7 @@ class Store:
 
     def __init__(self, product_list):
         """Create a store containing the provided products."""
-        self.products = product_list[:]
+        self.products = product_list
 
     def add_product(self, product):
         """Add a product to the store."""
