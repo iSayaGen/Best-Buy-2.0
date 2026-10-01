@@ -62,3 +62,61 @@ class Product:
         self.set_quantity(self.quantity - quantity)
 
         return total_price
+
+
+class NonStockedProduct(Product):
+    """Represent a product that does not have physical stock."""
+
+    def __init__(self, name, price):
+        """Create a non-stocked product."""
+        super().__init__(name, price, quantity=0)
+        self.active = True
+
+    def set_quantity(self, quantity):
+        """Keep the quantity of a non-stocked product at zero."""
+        self.quantity = 0
+
+    def buy(self, quantity):
+        """Purchase a non-stocked product without changing its quantity."""
+        if not self.active:
+            raise ValueError("Product is not available.")
+
+        if quantity <= 0:
+            raise ValueError("Purchase quantity must be positive.")
+
+        return self.price * quantity
+
+    def show(self):
+        """Print the non-stocked product's information."""
+        print(
+            f"{self.name}, Price: {self.price}")
+
+
+class LimitedProduct(Product):
+    """Represent a product with a maximum purchase quantity per order."""
+
+    def __init__(self, name, price, quantity, maximum):
+        """Create a limited product."""
+        if maximum <= 0:
+            raise ValueError("Maximum purchase quantity must be positive.")
+
+        super().__init__(name, price, quantity)
+        self.maximum = maximum
+
+    def buy(self, quantity):
+        """Purchase a limited quantity of the product."""
+        if quantity > self.maximum:
+            raise ValueError(
+                f"Cannot purchase more than {self.maximum} of this product."
+            )
+
+        return super().buy(quantity)
+
+    def show(self):
+        """Print the limited product's information."""
+        print(
+            f"{self.name}, "
+            f"Price: {self.price}, "
+            f"Quantity: {self.quantity}, "
+            f"Maximum: {self.maximum}"
+        )
