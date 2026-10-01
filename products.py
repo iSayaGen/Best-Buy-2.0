@@ -7,12 +7,12 @@ class Product:
             raise ValueError("Product name cannot be empty.")
 
         if price < 0:
-            raise Exception("Product price cannot be negative")
+            raise ValueError("Product price cannot be negative")
 
         if quantity < 0:
-            raise Exception("Product quantity cannot be negative")
+            raise ValueError("Product quantity cannot be negative")
 
-        self.name = name
+        self.name = name.strip()
         self.price = price
         self.quantity = quantity
         self.active = quantity > 0
