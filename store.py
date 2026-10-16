@@ -52,7 +52,7 @@ class Store:
         # All products have passed validation.
         total = 0
 
-        for product, quantity in shopping_list:
+        for product, quantity in quantities.items():
             total += product.buy(quantity)
 
         return total

@@ -2,7 +2,11 @@ import pytest
 
 from products import LimitedProduct
 from products import Product
+from products import NonStockedProduct
 from store import Store
+from promotions import PercentDiscount
+from promotions import SecondHalfPrice
+from promotions import ThirdOneFree
 
 
 def test_store_total_quantity():
@@ -74,3 +78,36 @@ def test_failed_order_does_not_change_any_product_stock():
 
     assert laptop.get_quantity() == 100
     assert shipping.get_quantity() == 250
+
+
+def test_order_applies_second_half_price_across_repeated_entries():
+    product = Product("MacBook Air M2", price=1450, quantity=100)
+    product.set_promotion(SecondHalfPrice("Second Half price!"))
+    store = Store([product])
+
+    total_price = store.order([(product, 1), (product, 1)])
+
+    assert total_price == 2175
+    assert product.get_quantity() == 98
+
+
+def test_order_applies_third_one_free_across_repeated_entries():
+    product = Product("Bose QuietComfort Earbuds", price=250, quantity=500)
+    product.set_promotion(ThirdOneFree("Third One Free!"))
+    store = Store([product])
+
+    total_price = store.order([(product, 2), (product, 1)])
+
+    assert total_price == 500
+    assert product.get_quantity() == 497
+
+
+def test_order_applies_percent_discount_across_repeated_entries():
+    product = NonStockedProduct("Windows License", price=125)
+    product.set_promotion(PercentDiscount("30% off!", percent=30))
+    store = Store([product])
+
+    total_price = store.order([(product, 1), (product, 3)])
+
+    assert total_price == pytest.approx(350)
+    assert product.get_quantity() == 0
